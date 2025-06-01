@@ -10,12 +10,12 @@ export default function Home() {
             Discover and host amazing local events in your city. Connect with your community through free events, meetups, and gatherings.
           </p>
           <div className="flex gap-4 justify-center">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+            <a href="/events" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
               Browse Events
-            </button>
-            <button className="border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-8 py-3 rounded-lg font-semibold transition-colors">
+            </a>
+            <a href="/events/create" className="border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-8 py-3 rounded-lg font-semibold transition-colors">
               Host an Event
-            </button>
+            </a>
           </div>
         </div>
 
