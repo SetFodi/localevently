@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
-import { User } from '@/models';
+import User from '@/models/User';
 
 export async function PUT(request: NextRequest) {
   try {
@@ -39,8 +39,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Find user
-    const user = await User.findById(userId);
+    // Find user and explicitly select password field
+    const user = await User.findById(userId).select('+password');
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -48,7 +48,17 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Verify current password
+    // Check if user has a password field
+    if (!user.password) {
+      // If user doesn't have a password (legacy user), we need to set one
+      // For now, return an error asking them to reset password
+      return NextResponse.json(
+        { error: 'Password not set. Please use the forgot password feature to set a new password.' },
+        { status: 400 }
+      );
+    }
+
+    // Verify current password using bcrypt directly
     const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isCurrentPasswordValid) {
       return NextResponse.json(

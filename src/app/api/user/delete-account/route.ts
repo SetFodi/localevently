@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
-import { User, Event } from '@/models';
+import User from '@/models/User';
+import Event from '@/models/Event';
 
 export async function DELETE(request: NextRequest) {
   try {
