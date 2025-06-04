@@ -45,10 +45,19 @@ export default function Navbar() {
               <MapPin className="h-4 w-4 transition-colors duration-300" />
               <span>Map</span>
             </Link>
+            <Link
+              href="/about"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ease-in-out"
+            >
+              About
+            </Link>
+            <Link
+              href="/help"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ease-in-out"
+            >
+              Help
+            </Link>
             <div className="flex items-center space-x-4">
-              {/* Theme Toggle */}
-              <ThemeToggle />
-
               {user ? (
                 <div className="relative">
                   <button
@@ -104,6 +113,9 @@ export default function Navbar() {
                   </Link>
                 </>
               )}
+
+              {/* Theme Toggle - moved to far right */}
+              <ThemeToggle />
             </div>
           </div>
 
@@ -142,6 +154,20 @@ export default function Navbar() {
                 onClick={() => setIsOpen(false)}
               >
                 Map View
+              </Link>
+              <Link
+                href="/about"
+                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                About
+              </Link>
+              <Link
+                href="/help"
+                className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Help
               </Link>
 
               {/* Mobile Theme Toggle */}
