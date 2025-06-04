@@ -56,10 +56,13 @@ export default function EventDetailPage() {
 
   const checkRSVPStatus = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${eventId}/rsvp`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {
@@ -97,11 +100,14 @@ export default function EventDetailPage() {
 
     setRsvpLoading(true);
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${eventId}/rsvp`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {
@@ -125,11 +131,14 @@ export default function EventDetailPage() {
     }
 
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {

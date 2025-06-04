@@ -38,10 +38,13 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/user/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {
@@ -61,11 +64,14 @@ export default function DashboardPage() {
     if (!confirm('Are you sure you want to delete this event?')) return;
 
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {

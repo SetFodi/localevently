@@ -21,14 +21,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing token on mount
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const checkAuthStatus = async () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+
+      if (savedToken && savedUser) {
+        // Verify the token is still valid by making a request to a protected endpoint
+        try {
+          const response = await fetch('/api/auth/verify', {
+            headers: {
+              'Authorization': `Bearer ${savedToken}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setToken(savedToken);
+            setUser(data.user);
+          } else {
+            // Token is invalid, clear localStorage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        } catch (error) {
+          // Network error or token invalid, clear localStorage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      } else {
+        // If no localStorage token, check if there's a cookie token
+        try {
+          const response = await fetch('/api/auth/verify');
+          if (response.ok) {
+            const data = await response.json();
+            // Cookie token is valid, set user but no token
+            // (API calls will use the HttpOnly cookie automatically)
+            setUser(data.user);
+            setToken(null); // Don't set a fake token
+          }
+        } catch (error) {
+          // No valid authentication found
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -83,11 +121,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
+    // Call logout API to clear HTTP-only cookie
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    // Redirect to home page
+    window.location.href = '/';
   };
 
   return (

@@ -26,10 +26,13 @@ export default function EventCard({ event, onRSVP, showRSVP = true }: EventCardP
 
   const checkRSVPStatus = async () => {
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${event._id}/rsvp`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {
@@ -50,11 +53,14 @@ export default function EventCard({ event, onRSVP, showRSVP = true }: EventCardP
 
     setLoading(true);
     try {
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/events/${event._id}/rsvp`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers,
       });
 
       if (response.ok) {
