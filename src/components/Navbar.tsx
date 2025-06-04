@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Menu, X, Calendar, MapPin, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,13 +12,13 @@ export default function Navbar() {
   const { user, logout } = useAuth();
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-lg">
+    <nav className="bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 ease-in-out">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
+              <Calendar className="h-8 w-8 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
+              <span className="text-xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
                 LocalEvently
               </span>
             </Link>
@@ -25,26 +26,29 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link 
-              href="/events" 
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            <Link
+              href="/events"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ease-in-out"
             >
               Browse Events
             </Link>
-            <Link 
-              href="/events/create" 
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            <Link
+              href="/events/create"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ease-in-out"
             >
               Host Event
             </Link>
-            <Link 
-              href="/map" 
-              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-1"
+            <Link
+              href="/map"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 ease-in-out flex items-center space-x-1"
             >
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4 transition-colors duration-300" />
               <span>Map</span>
             </Link>
             <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
               {user ? (
                 <div className="relative">
                   <button
@@ -132,13 +136,19 @@ export default function Navbar() {
               >
                 Host Event
               </Link>
-              <Link 
-                href="/map" 
+              <Link
+                href="/map"
                 className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors"
                 onClick={() => setIsOpen(false)}
               >
                 Map View
               </Link>
+
+              {/* Mobile Theme Toggle */}
+              <div className="px-3 py-2">
+                <ThemeToggle />
+              </div>
+
               {user ? (
                 <>
                   <Link

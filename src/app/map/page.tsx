@@ -40,10 +40,11 @@ export default function MapPage() {
   const fetchEvents = async () => {
     try {
       const response = await fetch('/api/events');
+
       if (response.ok) {
         const data = await response.json();
         setEvents(data.events);
-        
+
         // Extract unique tags
         const tags = new Set<string>();
         data.events.forEach((event: Event) => {

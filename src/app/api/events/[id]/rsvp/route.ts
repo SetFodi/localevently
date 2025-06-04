@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
-import Event from '@/models/Event';
-import User from '@/models/User';
+import { Event, User } from '@/models';
 
 // POST /api/events/[id]/rsvp - RSVP to an event
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
+
     // Get token from header or cookie
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('token')?.value;
@@ -27,7 +26,7 @@ export async function POST(
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     const userId = decoded.userId;
 
-    const eventId = params.id;
+    const { id: eventId } = await params;
 
     // Find the event
     const event = await Event.findById(eventId);
@@ -100,11 +99,11 @@ export async function POST(
 // GET /api/events/[id]/rsvp - Check RSVP status
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
+
     // Get token from header or cookie
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('token')?.value;
@@ -119,7 +118,7 @@ export async function GET(
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     const userId = decoded.userId;
 
-    const eventId = params.id;
+    const { id: eventId } = await params;
 
     // Find the event
     const event = await Event.findById(eventId);

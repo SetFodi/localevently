@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Event from '@/models/Event';
-import User from '@/models/User';
+import { Event, User } from '@/models';
 import jwt from 'jsonwebtoken';
 
 // GET /api/events - Fetch events with optional filtering

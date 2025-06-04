@@ -63,7 +63,7 @@ export default function EventsPage() {
         params.append('radius', currentFilters.location.radius.toString());
       }
 
-      const response = await fetch(`/api/events/mock?${params}`);
+      const response = await fetch(`/api/events?${params}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch events');
@@ -131,7 +131,7 @@ export default function EventsPage() {
   // Handle RSVP refresh (when user RSVPs from EventCard)
   const handleRSVP = (eventId: string) => {
     // Refresh events to get updated attendee counts
-    fetchEvents();
+    fetchEvents(filters, pagination.page);
   };
 
   return (

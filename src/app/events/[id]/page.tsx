@@ -183,11 +183,9 @@ export default function EventDetailPage() {
     );
   }
 
-  const organizerName = typeof event.organizer === 'string' 
-    ? 'Unknown Organizer' 
+  const organizerName = typeof event.organizer === 'string'
+    ? 'Unknown Organizer'
     : event.organizer.name;
-
-  const attendeeCount = Array.isArray(event.attendees) ? event.attendees.length : 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

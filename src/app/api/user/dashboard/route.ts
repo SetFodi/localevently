@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
-import Event from '@/models/Event';
-import User from '@/models/User';
+import { Event, User } from '@/models';
 
 // GET /api/user/dashboard - Get user dashboard data
 export async function GET(request: NextRequest) {

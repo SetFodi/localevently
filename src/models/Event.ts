@@ -91,10 +91,7 @@ const EventSchema = new Schema<IEvent>({
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],
-  imageUrl: {
-    type: String,
-    match: [/^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/i, 'Please enter a valid image URL']
-  },
+  imageUrl: String,
   isActive: {
     type: Boolean,
     default: true

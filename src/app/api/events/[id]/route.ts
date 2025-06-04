@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
-import Event from '@/models/Event';
+import { Event } from '@/models';
 
 // GET /api/events/[id] - Get single event
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
-    const eventId = params.id;
+
+    const { id: eventId } = await params;
 
     const event = await Event.findById(eventId)
       .populate('organizer', 'name email')
@@ -47,11 +47,11 @@ export async function GET(
 // PUT /api/events/[id] - Update event (organizer only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
+
     // Get token from header or cookie
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('token')?.value;
@@ -67,7 +67,7 @@ export async function PUT(
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     const userId = decoded.userId;
 
-    const eventId = params.id;
+    const { id: eventId } = await params;
 
     // Find the event
     const event = await Event.findById(eventId);
@@ -143,11 +143,11 @@ export async function PUT(
 // DELETE /api/events/[id] - Delete event (organizer only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
+
     // Get token from header or cookie
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '') || request.cookies.get('token')?.value;
@@ -163,7 +163,7 @@ export async function DELETE(
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
     const userId = decoded.userId;
 
-    const eventId = params.id;
+    const { id: eventId } = await params;
 
     // Find the event
     const event = await Event.findById(eventId);
