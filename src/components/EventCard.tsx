@@ -1,15 +1,80 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Calendar, Clock, MapPin, Users, Tag } from 'lucide-react';
 import { Event } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EventCardProps {
   event: Event;
   onRSVP?: (eventId: string) => void;
-  isRSVPed?: boolean;
+  showRSVP?: boolean;
 }
 
-export default function EventCard({ event, onRSVP, isRSVPed = false }: EventCardProps) {
+export default function EventCard({ event, onRSVP, showRSVP = true }: EventCardProps) {
+  const { user, token } = useAuth();
+  const [isRSVPed, setIsRSVPed] = useState(false);
+  const [attendeeCount, setAttendeeCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && token) {
+      checkRSVPStatus();
+    }
+    setAttendeeCount(getAttendeeCount());
+  }, [user, token, event._id]);
+
+  const checkRSVPStatus = async () => {
+    try {
+      const response = await fetch(`/api/events/${event._id}/rsvp`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsRSVPed(data.isAttending);
+        setAttendeeCount(data.attendeeCount);
+      }
+    } catch (error) {
+      console.error('Error checking RSVP status:', error);
+    }
+  };
+
+  const handleRSVP = async () => {
+    if (!user) {
+      alert('Please login to RSVP for events');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/events/${event._id}/rsvp`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsRSVPed(data.isAttending);
+        setAttendeeCount(data.attendeeCount);
+
+        if (onRSVP) {
+          onRSVP(event._id);
+        }
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to RSVP');
+      }
+    } catch (error) {
+      alert('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       weekday: 'short',
@@ -91,7 +156,7 @@ export default function EventCard({ event, onRSVP, isRSVPed = false }: EventCard
           <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
             <Users className="h-4 w-4 mr-2 text-blue-600" />
             <span>
-              {getAttendeeCount()} attending
+              {attendeeCount} attending
               {event.maxAttendees && ` • ${event.maxAttendees} max`}
             </span>
           </div>
@@ -126,17 +191,27 @@ export default function EventCard({ event, onRSVP, isRSVPed = false }: EventCard
             View Details
           </a>
           
-          {onRSVP && (
+          {showRSVP && user && (
             <button
-              onClick={() => onRSVP(event._id)}
-              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              onClick={handleRSVP}
+              disabled={loading}
+              className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 isRSVPed
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
-              {isRSVPed ? 'Going ✓' : 'RSVP'}
+              {loading ? 'Loading...' : (isRSVPed ? 'Going ✓' : 'RSVP')}
             </button>
+          )}
+
+          {showRSVP && !user && (
+            <a
+              href="/auth/login"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors text-center"
+            >
+              Login to RSVP
+            </a>
           )}
         </div>
       </div>

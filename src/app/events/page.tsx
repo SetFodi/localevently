@@ -128,11 +128,10 @@ export default function EventsPage() {
     );
   };
 
-  // Handle RSVP (placeholder for now)
+  // Handle RSVP refresh (when user RSVPs from EventCard)
   const handleRSVP = (eventId: string) => {
-    // TODO: Implement RSVP functionality
-    console.log('RSVP for event:', eventId);
-    alert('RSVP functionality coming soon!');
+    // Refresh events to get updated attendee counts
+    fetchEvents();
   };
 
   return (

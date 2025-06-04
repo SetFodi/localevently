@@ -1,52 +1,76 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { Calendar, Clock, MapPin, Users, Tag, ArrowLeft, Share2, Heart } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Calendar, Clock, MapPin, Users, Tag, ArrowLeft, Share2, Heart, Edit, Trash2 } from 'lucide-react';
 import { Event } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 export default function EventDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params.id as string;
-  
+  const { user, token } = useAuth();
+
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRSVPed, setIsRSVPed] = useState(false);
+  const [attendeeCount, setAttendeeCount] = useState(0);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
 
   useEffect(() => {
-    const fetchEvent = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // For now, we'll fetch from our mock API and find the specific event
-        const response = await fetch('/api/events/mock');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch event');
-        }
-
-        const data = await response.json();
-        const foundEvent = data.events.find((e: Event) => e._id === eventId);
-        
-        if (!foundEvent) {
-          throw new Error('Event not found');
-        }
-
-        setEvent(foundEvent);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        console.error('Error fetching event:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (eventId) {
       fetchEvent();
     }
   }, [eventId]);
+
+  useEffect(() => {
+    if (user && token && event) {
+      checkRSVPStatus();
+    }
+  }, [user, token, event]);
+
+  const fetchEvent = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/events/${eventId}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch event');
+      }
+
+      const data = await response.json();
+      setEvent(data.event);
+      setAttendeeCount(data.event.attendees?.length || 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error fetching event:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkRSVPStatus = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/rsvp`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsRSVPed(data.isAttending);
+        setAttendeeCount(data.attendeeCount);
+      }
+    } catch (error) {
+      console.error('Error checking RSVP status:', error);
+    }
+  };
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -65,10 +89,58 @@ export default function EventDetailPage() {
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const handleRSVP = () => {
-    setIsRSVPed(!isRSVPed);
-    // TODO: Implement actual RSVP functionality
-    console.log('RSVP toggled for event:', eventId);
+  const handleRSVP = async () => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+
+    setRsvpLoading(true);
+    try {
+      const response = await fetch(`/api/events/${eventId}/rsvp`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsRSVPed(data.isAttending);
+        setAttendeeCount(data.attendeeCount);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to RSVP');
+      }
+    } catch (error) {
+      alert('Network error. Please try again.');
+    } finally {
+      setRsvpLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        router.push('/dashboard');
+      } else {
+        const errorData = await response.json();
+        alert(errorData.error || 'Failed to delete event');
+      }
+    } catch (error) {
+      alert('Network error. Please try again.');
+    }
   };
 
   const handleShare = () => {
@@ -145,6 +217,22 @@ export default function EventDetailPage() {
 
         {/* Action buttons */}
         <div className="absolute top-4 right-4 flex gap-2">
+          {user && event && typeof event.organizer === 'object' && event.organizer._id === user._id && (
+            <>
+              <Link
+                href={`/events/${eventId}/edit`}
+                className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Edit className="h-5 w-5" />
+              </Link>
+              <button
+                onClick={handleDeleteEvent}
+                className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-red-600"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+            </>
+          )}
           <button
             onClick={handleShare}
             className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -270,16 +358,26 @@ export default function EventDetailPage() {
               </div>
 
               {/* RSVP Button */}
-              <button
-                onClick={handleRSVP}
-                className={`w-full mt-6 px-4 py-3 rounded-lg font-semibold transition-colors ${
-                  isRSVPed
-                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                {isRSVPed ? 'Going ✓' : 'RSVP to Event'}
-              </button>
+              {user ? (
+                <button
+                  onClick={handleRSVP}
+                  disabled={rsvpLoading}
+                  className={`w-full mt-6 px-4 py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isRSVPed
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {rsvpLoading ? 'Loading...' : (isRSVPed ? 'Going ✓' : 'RSVP to Event')}
+                </button>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="w-full mt-6 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors text-center block"
+                >
+                  Login to RSVP
+                </Link>
+              )}
               
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
                 Free event • No payment required

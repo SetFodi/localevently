@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 
@@ -35,6 +36,17 @@ export async function POST(request: NextRequest) {
 
     await user.save();
 
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    );
+
     // Remove password from response
     const userResponse = {
       _id: user._id,
@@ -44,10 +56,24 @@ export async function POST(request: NextRequest) {
       createdAt: user.createdAt
     };
 
-    return NextResponse.json(
-      { message: 'User created successfully', user: userResponse },
+    const response = NextResponse.json(
+      {
+        message: 'User created successfully',
+        user: userResponse,
+        token
+      },
       { status: 201 }
     );
+
+    // Set HTTP-only cookie for additional security
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    return response;
 
   } catch (error: any) {
     console.error('Registration error:', error);

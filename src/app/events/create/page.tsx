@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, Clock, MapPin, Tag, Users, Image as ImageIcon, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
 interface EventFormData {
   title: string;
@@ -21,6 +24,9 @@ const POPULAR_TAGS = [
 ];
 
 export default function CreateEventPage() {
+  const { user, token } = useAuth();
+  const router = useRouter();
+
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -35,6 +41,12 @@ export default function CreateEventPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+    }
+  }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -53,6 +65,25 @@ export default function CreateEventPage() {
     }));
   };
 
+  const handleLocationSearch = async () => {
+    if (!formData.address) return;
+
+    try {
+      // Using a simple geocoding approach - in production, you'd use a proper geocoding service
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}`
+      );
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        // Store coordinates for later use
+        console.log('Coordinates found:', data[0].lat, data[0].lon);
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -60,28 +91,61 @@ export default function CreateEventPage() {
 
     try {
       // Basic validation
-      if (!formData.title || !formData.description || !formData.date || 
+      if (!formData.title || !formData.description || !formData.date ||
           !formData.startTime || !formData.endTime || !formData.address) {
         throw new Error('Please fill in all required fields');
       }
 
-      // For now, just simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      alert('Event created successfully! (This is a demo - actual creation coming soon)');
-      
-      // Reset form
-      setFormData({
-        title: '',
-        description: '',
-        date: '',
-        startTime: '',
-        endTime: '',
-        address: '',
-        tags: [],
-        maxAttendees: '',
-        imageUrl: ''
+      // Get coordinates for the address
+      let coordinates = { lat: 41.7151, lng: 44.8271 }; // Default to Tbilisi
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(formData.address)}`
+        );
+        const data = await response.json();
+        if (data && data.length > 0) {
+          coordinates = {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon)
+          };
+        }
+      } catch (geocodeError) {
+        console.warn('Geocoding failed, using default coordinates');
+      }
+
+      // Prepare event data
+      const eventData = {
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        location: {
+          address: formData.address,
+          coordinates
+        },
+        tags: formData.tags,
+        maxAttendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : undefined,
+        imageUrl: formData.imageUrl || undefined
+      };
+
+      // Create event
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(eventData),
       });
+
+      if (response.ok) {
+        const data = await response.json();
+        router.push(`/events/${data.event._id}`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create event');
+      }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
@@ -95,13 +159,13 @@ export default function CreateEventPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <a 
+          <Link
             href="/events"
             className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Events
-          </a>
+          </Link>
           
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Create New Event
@@ -286,12 +350,12 @@ export default function CreateEventPage() {
                 {loading ? 'Creating Event...' : 'Create Event'}
               </button>
               
-              <a
+              <Link
                 href="/events"
                 className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
               >
                 Cancel
-              </a>
+              </Link>
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">

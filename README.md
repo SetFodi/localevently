@@ -20,18 +20,21 @@ A hyperlocal event discovery and hosting platform built with modern web technolo
 - **Advanced Filtering**: Search, tags, date range, location-based
 - **Interactive Features**: RSVP buttons, sharing, favorites
 
-### 🔄 In Progress
+### ✅ Completed
 - User authentication UI (login/register forms)
 - Map integration with Leaflet
-- Real-time RSVP updates
-- Database connection setup
+- Real-time RSVP system
+- User dashboard and profile management
+- Event editing and deletion
+- Protected routes and middleware
+- Complete environment setup
 
-### 📋 Planned
-- Advanced filtering and search
+### 📋 Future Enhancements
 - Email notifications
 - Admin panel
 - PWA support
 - Performance optimizations
+- Real-time chat for organizers
 
 ## 🛠️ Tech Stack
 
@@ -83,28 +86,64 @@ src/
    ```
 
 2. **Set up environment variables**:
-   Copy `.env.local` and update with your MongoDB Atlas connection string:
-   ```env
-   MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/localevently
-   NEXTAUTH_SECRET=your-super-secret-key-here
-   JWT_SECRET=your-jwt-secret-key-here
+   Copy `.env.local.example` to `.env.local` and update with your MongoDB Atlas connection string:
+   ```bash
+   cp .env.local.example .env.local
    ```
 
-3. **Run the development server**:
+   Update `.env.local` with your actual values:
+   ```env
+   MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/localevently?retryWrites=true&w=majority
+   JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
+   NEXTAUTH_SECRET=your-nextauth-secret-key-here
+   NEXTAUTH_URL=http://localhost:3000
+   ```
+
+3. **Seed the database** (optional):
+   ```bash
+   curl -X POST http://localhost:3000/api/events/seed
+   ```
+
+4. **Run the development server**:
    ```bash
    npm run dev
    ```
 
-4. **Open [http://localhost:3000](http://localhost:3000)** in your browser
+5. **Open [http://localhost:3000](http://localhost:3000)** in your browser
 
-## 🎯 Next Steps
+6. **Create an account** and start exploring!
 
-1. **Set up MongoDB Atlas** (free tier)
-2. **Create event listing page** with filtering
-3. **Build event creation form**
-4. **Add user authentication UI**
-5. **Integrate map functionality**
-6. **Deploy to Vercel**
+## 🎯 Features Overview
+
+### 🔐 **Authentication System**
+- User registration and login
+- JWT-based authentication
+- Protected routes and middleware
+- User profile management
+
+### 📅 **Event Management**
+- Create, edit, and delete events
+- Rich event details with location and tags
+- Image support and event categorization
+- Organizer-only event management
+
+### 🎫 **RSVP System**
+- Real-time RSVP functionality
+- Attendee count tracking
+- Capacity management
+- User dashboard for RSVPs
+
+### 🗺️ **Map Integration**
+- Interactive map with Leaflet
+- Event markers with popups
+- Location-based filtering
+- Geocoding for addresses
+
+### 📱 **User Experience**
+- Responsive design for all devices
+- Dark mode support
+- Real-time updates
+- Intuitive navigation
 
 ## 📝 API Endpoints
 
@@ -115,6 +154,16 @@ src/
 ### Events
 - `GET /api/events` - List events with filtering
 - `POST /api/events` - Create new event (auth required)
+- `GET /api/events/[id]` - Get single event
+- `PUT /api/events/[id]` - Update event (organizer only)
+- `DELETE /api/events/[id]` - Delete event (organizer only)
+- `POST /api/events/[id]/rsvp` - RSVP to event
+- `GET /api/events/[id]/rsvp` - Check RSVP status
+
+### User
+- `GET /api/user/dashboard` - Get user dashboard data
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update user profile
 
 ## 🌟 Why LocalEvently?
 
